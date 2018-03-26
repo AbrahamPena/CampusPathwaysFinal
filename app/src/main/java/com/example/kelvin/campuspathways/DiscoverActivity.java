@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,10 +25,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONArray;
@@ -35,6 +33,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -52,7 +52,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     private Button btPathControl, btDisplayPaths, btNodes;
     private Spinner dropdownFeet, dropdownInches;
     //Sensors
-    private FusedLocationProviderClient fusedLocationProviderClient;//Gets starting location
     private SensorManager sensorManager;
     private Sensor stepSensor;
     //Gravity and rotation info; Used for calculating orientation
@@ -63,7 +62,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     private float[] rotation = new float[9];
     private float[] orientation = new float[3];
     private float currentAngle = 0f;
-    private int sensorChanged = 0;
     private GeomagneticField geomagneticField;
     //List of points in user path
     private ArrayList<TimedLocation> userPath;
@@ -72,6 +70,9 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     private boolean tracking = false;//Checks whether user is being tracked
     private String androidId;
 
+    private GPSLocation tracker;    //Gets the GPS for starting location
+    private Location location;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +80,9 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         thisContext = this;
 
         androidId = getAndroidID();
+        tracker = new GPSLocation(getApplication());    //Gets an instance of the GPSLocation class
+        location = tracker.getLocation();
+
 
         initObjects();
 
@@ -105,9 +109,8 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         magnetSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        start();
 
-        //Set up location client
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         //Give choices to dropdowns
         ArrayList<Integer> feetList = new ArrayList<>(4);
@@ -189,32 +192,8 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                             return;
                         }
                     }
-                    fusedLocationProviderClient.getLastLocation().addOnSuccessListener(DiscoverActivity.this,
-                            new OnSuccessListener<Location>() {
 
-                                @Override
-                                public void onSuccess(Location location) {
-                                    if (location != null) {
-
-                                        //Get starting location
-                                        LatLng start = new LatLng(location.getLatitude(), location.getLongitude());
-
-                                        //Add starting location to List
-                                        userPath.add(new TimedLocation(start));
-
-                                        //Get declination for finding true north
-                                        geomagneticField = new GeomagneticField((float) location.getLatitude(),
-                                                (float) location.getLatitude(), (float) location.getAltitude(),
-                                                System.currentTimeMillis());
-
-                                    } else {
-                                        Toast.makeText(thisContext,
-                                                "Error. Location not found. Make sure Location is enabled on your phone",
-                                                Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                            });
+                    onSuccess(location);   //We get our starting point using the tracker
 
                     //Update button text and boolean
                     btPathControl.setText(R.string.stopPathDisc);
@@ -251,7 +230,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                     String st = "'" + pathJSON.toString() + "'";
 
                     //Query 1: Create or update User
-                    double step_length = userHeightInches * 0.0254 * 0.413;//Step length, in meters
+                    double step_length = (userHeightInches + 3) * 0.0254 * 0.413;//Step length, in meters
                     String query1 = "IF EXISTS(SELECT * FROM Users where Android_ID = '" + androidId
                             + "') \n"
                             + " UPDATE Users SET Step_Length = " + step_length
@@ -311,6 +290,23 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
     }
 
+    int secondsPassed = 0;                  //Keeps track of time passed
+    Timer timer = new Timer();              //Timer class that
+    TimerTask task = new TimerTask() {      //What to do as the timer is running
+        public void run() {
+            secondsPassed++;                //We increment every seconds that has gone by
+            if ((secondsPassed % 10) == 0) {    //Every 60 seconds, we get a ping from the gps
+                tracker.turnOffGPS();
+                timer.cancel();
+                Log.d("TAG", "run: Time to go to sleep");
+            }
+        }
+    };
+
+    public void start() {
+        timer.scheduleAtFixedRate(task, 1000, 1000);
+    }
+
     //Filters sensor data to improve accuracy
     //Based on code from [2]
     protected float[] filter(float[] in, float[] out) {
@@ -355,7 +351,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         if (!tracking) return;
 
         //This will help up get direction the phone is pointing
-        sensorChanged++;    //This will keep track of how many times the sensor has changed
         //Accel sensor
         if (event.sensor == accelSensor) {
             lastAccel = filter(event.values.clone(), lastAccel);
@@ -379,7 +374,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         if (event.sensor == stepSensor && userPath.size() >= 1) {
 
             //Calculate current step length, in meters
-            double stepLength = userHeightInches * 0.0254 * 0.413;
+            double stepLength = ((userHeightInches + 3) * 0.413) * 0.0254;
 
             LatLng lastLocation = userPath.get(userPath.size() - 1).getLocation();
 
@@ -427,6 +422,28 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
         return Settings.Secure.getString(thisContext.getContentResolver(), Settings.Secure.ANDROID_ID)
                 + Build.SERIAL;
+    }
+
+    //This method gets the starting position for the tracker
+    public void onSuccess(Location location) {
+        if (location != null) {
+
+            //Get starting location
+            LatLng start = new LatLng(location.getLatitude(), location.getLongitude());
+
+            //Add starting location to List
+            userPath.add(new TimedLocation(start));
+
+            //Get declination for finding true north
+            geomagneticField = new GeomagneticField((float) location.getLatitude(),
+                    (float) location.getLatitude(), (float) location.getAltitude(),
+                    System.currentTimeMillis());
+            //tracker.turnOffGPS();       //Turn off GPS to avoid excessive battery usage
+        } else {
+            Toast.makeText(thisContext,
+                    "Error. Location not found. Make sure Location is enabled on your phone",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
 }
