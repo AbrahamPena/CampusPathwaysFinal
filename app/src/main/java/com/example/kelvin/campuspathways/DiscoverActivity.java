@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -25,7 +24,20 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+
 import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONArray;
@@ -33,8 +45,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -46,14 +56,16 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     [2] https://www.built.io/blog/applying-low-pass-filter-to-android-sensor-s-readings
     */
 
-    Context thisContext;
+    Context thisContext = this;
     //UI Elements
     private TextView tvDiscoverStatus;
     private Button btPathControl, btDisplayPaths, btNodes;
     private Spinner dropdownFeet, dropdownInches;
+
     //Sensors
     private SensorManager sensorManager;
     private Sensor stepSensor;
+
     //Gravity and rotation info; Used for calculating orientation
     private Sensor accelSensor, magnetSensor, gyroSensor;
     private float[] lastAccel = new float[3];
@@ -70,23 +82,36 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     private boolean tracking = false;//Checks whether user is being tracked
     private String androidId;
 
-    private GPSLocation tracker;    //Gets the GPS for starting location
-    private Location location;
+
+    private int count = 0;
+
+    //Fused Location elements
+    private LocationRequest locationRequest;
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private Location currentLocation;//Device current location
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_discover);
-        thisContext = this;
 
         androidId = getAndroidID();
-        tracker = new GPSLocation(getApplication());    //Gets an instance of the GPSLocation class
-        location = tracker.getLocation();
-
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);//Get location client
 
         initObjects();
 
+        getStartLocation();
+        createLocationRequest();//Creates object to handle location
+
+        getCurrentLocationSettings();
+        startLocationUpdates();
+
+
+        Toast.makeText(thisContext, "Currently finding your location", Toast.LENGTH_LONG).show();
+
     }
+
 
     //Initialize elements
     public void initObjects() {
@@ -109,8 +134,15 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         magnetSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        start();
 
+        //What to do on location update
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                currentLocation = locationResult.getLastLocation();
+                count++;
+            }
+        };
 
         //Give choices to dropdowns
         ArrayList<Integer> feetList = new ArrayList<>(4);
@@ -193,7 +225,10 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                         }
                     }
 
-                    onSuccess(location);   //We get our starting point using the tracker
+
+                    Toast.makeText(thisContext, "Starting location found, we are now collecting your coordinates", Toast.LENGTH_LONG).show();
+                    onSuccess(currentLocation);   //We get our starting point using the tracker
+
 
                     //Update button text and boolean
                     btPathControl.setText(R.string.stopPathDisc);
@@ -202,6 +237,9 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
                 //Currently tracking; Stop
                 else{
+
+                    //We deactivate the gps receiver whenever when we stop collecting paths
+                    fusedLocationProviderClient.removeLocationUpdates(locationCallback);
 
                     //Serialize list of points
                     ArrayList<JSONObject> pathTemp = new ArrayList<>();
@@ -230,7 +268,9 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                     String st = "'" + pathJSON.toString() + "'";
 
                     //Query 1: Create or update User
-                    double step_length = (userHeightInches + 3) * 0.0254 * 0.413;//Step length, in meters
+
+                    double step_length = (userHeightInches + 1.3) * 0.0254 * 0.413;//Step length, in meters
+
                     String query1 = "IF EXISTS(SELECT * FROM Users where Android_ID = '" + androidId
                             + "') \n"
                             + " UPDATE Users SET Step_Length = " + step_length
@@ -290,22 +330,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
     }
 
-    int secondsPassed = 0;                  //Keeps track of time passed
-    Timer timer = new Timer();              //Timer class that
-    TimerTask task = new TimerTask() {      //What to do as the timer is running
-        public void run() {
-            secondsPassed++;                //We increment every seconds that has gone by
-            if ((secondsPassed % 10) == 0) {    //Every 60 seconds, we get a ping from the gps
-                tracker.turnOffGPS();
-                timer.cancel();
-                Log.d("TAG", "run: Time to go to sleep");
-            }
-        }
-    };
-
-    public void start() {
-        timer.scheduleAtFixedRate(task, 1000, 1000);
-    }
 
     //Filters sensor data to improve accuracy
     //Based on code from [2]
@@ -348,7 +372,9 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     public void onSensorChanged(SensorEvent event) {
 
         //First check if tracking mode is enabled; Return if not
-        if (!tracking) return;
+        if (!tracking) {
+            return;
+        }
 
         //This will help up get direction the phone is pointing
         //Accel sensor
@@ -373,19 +399,29 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         //If event is a step
         if (event.sensor == stepSensor && userPath.size() >= 1) {
 
-            //Calculate current step length, in meters
-            double stepLength = ((userHeightInches + 3) * 0.413) * 0.0254;
+            //After about a minute, we get a reading from the gps to fix any drift
+            if (count % 300 == 0) {
+                userPath.add(new TimedLocation(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude())));
+            }
 
-            LatLng lastLocation = userPath.get(userPath.size() - 1).getLocation();
+            //Else, we collect data as usual
+            else {
 
-            //Calculate new LatLng
-            LatLng currentPos = SphericalUtil.computeOffset(lastLocation, stepLength, currentAngle);
+                double stepLength = (((userHeightInches + 1.3) * 0.413) * 0.0254);
 
-            //Show location; Debug only
-            tvDiscoverStatus.setText("Lat: " + currentPos.latitude + ", Lng: " + currentPos.longitude);
+                LatLng lastLocation = userPath.get(userPath.size() - 1).getLocation();
 
-            //Store step in path
-            userPath.add(new TimedLocation(currentPos));
+                double direction = currentAngle;
+
+                //Calculate new LatLng
+                LatLng currentPos = SphericalUtil.computeOffset(lastLocation, stepLength, direction);
+
+                //Show location; Debug only
+                tvDiscoverStatus.setText("Lat: " + currentPos.latitude + ", Lng: " + currentPos.longitude);
+
+                //Store step in path
+                userPath.add(new TimedLocation(currentPos));
+            }
 
         }
 
@@ -438,7 +474,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
             geomagneticField = new GeomagneticField((float) location.getLatitude(),
                     (float) location.getLatitude(), (float) location.getAltitude(),
                     System.currentTimeMillis());
-            //tracker.turnOffGPS();       //Turn off GPS to avoid excessive battery usage
         } else {
             Toast.makeText(thisContext,
                     "Error. Location not found. Make sure Location is enabled on your phone",
@@ -446,4 +481,44 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         }
     }
 
+    void createLocationRequest() {
+        //Create an object to request location and set parameters
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(600);//Preferred update rate, milliseconds
+        locationRequest.setFastestInterval(200);//Fastest update rate, milliseconds
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);//Prioritize accuracy over battery usage; Accurate to a few feet (in theory)
+    }
+
+    void getStartLocation() {
+        //Check location permission and prompt if required
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
+        }
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                //If location successfully found
+                if (location != null) {
+                    //Display current coordinates to user
+                    currentLocation = location;
+                }
+            }
+        });
+    }
+
+    void getCurrentLocationSettings() {
+        //Create location request with created location object
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+    }
+
+    void startLocationUpdates() {
+        //Check for permissions
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+    }
 }
