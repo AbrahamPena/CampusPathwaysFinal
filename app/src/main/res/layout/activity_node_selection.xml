@@ -4,17 +4,34 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btDisplayFromNodes"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Display Paths" />
+        android:text="   Select a Starting Location:" />
+
+    <Spinner
+        android:id="@+id/startLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Starting Location" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="   Select an Ending Location:" />
+
+    <Spinner
+        android:id="@+id/endLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Ending Location" />
 
     <Button
-        android:id="@+id/btDiscoverFromNodes"
+        android:id="@+id/selectPath"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Discover Paths" />
+        android:onClick="getPathways"
+        android:text="Find Pathways" />
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
