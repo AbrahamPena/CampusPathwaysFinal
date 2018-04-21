@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Campus Pathways</string>
+    <string name="app_name">Campus Pathways App</string>
     <string name="title_activity_display">Map</string>
     <string name="startPathDisc">Start Path Discovery</string>
     <string name="stopPathDisc">Stop Path Discovery and Save</string>

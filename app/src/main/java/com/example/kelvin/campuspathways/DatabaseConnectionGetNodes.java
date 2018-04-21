@@ -109,7 +109,7 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
     }
 
     //This method places the nodes on the map
-    private void plotNodes() {
+    void plotNodes() {
         if (points.isEmpty()) { return; }
 
         LatLng mapStart = points.get(0);

@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/CampusPathways.iml" filepath="$PROJECT_DIR$/CampusPathways.iml" />
+      <module fileurl="file://C:\Users\Kelvin\AndroidStudioProjects\CampusPathwaysFinal\CampusPathways.iml" filepath="C:\Users\Kelvin\AndroidStudioProjects\CampusPathwaysFinal\CampusPathways.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/CampusPathwaysFinal.iml" filepath="$PROJECT_DIR$/.idea/CampusPathwaysFinal.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Kelvin\AndroidStudioProjects\CampusPathwaysFinal\app\app.iml" filepath="C:\Users\Kelvin\AndroidStudioProjects\CampusPathwaysFinal\app\app.iml" />
     </modules>
   </component>
 </project>
