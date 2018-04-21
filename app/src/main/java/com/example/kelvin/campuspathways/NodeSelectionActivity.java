@@ -7,11 +7,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -77,12 +80,11 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
         catch (ExecutionException e) { e.printStackTrace(); }
         catch (TimeoutException e) { e.printStackTrace(); }
 
-
         //Add names of building to the list for the spinner
         final ArrayList<String> buildingList = databaseConnection.buildingList;
 
         //Create an adapter for the spinner
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, buildingList);
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, buildingList);
 
         //Set the list in the drop down menu
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -99,7 +101,6 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
                 //We simply get their index and compare that to the index in the point arraylist
                 startingLocationIndex = (int) adapterView.getItemIdAtPosition(i);
                 pointStart = databaseConnection.points.get(startingLocationIndex);
-                //databasePathConnection.plotPaths(pointSelected);
             }
 
             @Override
@@ -113,13 +114,29 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
                 //We simply get their index and compare that to the index in the point arraylist
                 endingLocationIndex = (int) adapterView.getItemIdAtPosition(i);
                 pointEnd = databaseConnection.points.get(endingLocationIndex);
-                //Log.d("TAG", "onItemSelected: " + pointEnd);  //For debugging
-                //databasePathConnection.plotPaths(pointSelected);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
+
+        mMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
+            @Override
+            public void onCircleClick(Circle circle) {
+                String buildingName = (String)circle.getTag();
+                printBuilding(buildingName);
+            }
+        });
+
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+            @Override
+            public void onPolylineClick(Polyline polyline) {
+                String timeTaken = (String)polyline.getTag();
+                printBuilding(timeTaken);
+                //Log.d("TAG", "onPolylineClick: touch");
+            }
+        });
+
     }
 
 
@@ -130,5 +147,11 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
             //We get the pathways we desire
             databasePathConnection.plotPaths(pointStart);
             databasePathConnection.plotPaths(pointEnd);
+            databaseConnection.plotNodes(); //Plot nodes since the plot paths clears the google map before placing the paths
         }
+
+    void printBuilding(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+    }
+
 }
