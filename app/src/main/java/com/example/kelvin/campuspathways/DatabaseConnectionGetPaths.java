@@ -14,12 +14,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+
 
 /**
  * Created by Abraham on 4/13/18.
@@ -117,50 +117,6 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
 
     }
 
-    //Plot paths
-    void plotPaths(LatLng markerPosition) {
-
-        //gMap.clear();
-
-        filterPathsNode(markerPosition);
-
-        //Iterate through List of JSON arrays
-        //Each JSON array is 1 pathway
-        try {
-            for (int i = 0; i < paths.size(); i++) {
-
-                //Decode JSON array into polyline
-                JSONArray pathJSON = new JSONArray(paths.get(i));
-
-                ArrayList<LatLng> points = new ArrayList<>();
-                //Get JSON array into list of points
-                for (int j = 0; j < pathJSON.length(); j++) {
-                    //Get data from JSON object
-                    JSONObject point = pathJSON.getJSONObject(j);
-                    double lat = point.getDouble("Latitude");
-                    double lng = point.getDouble("Longitude");
-
-                    //Make point from JSON data and add to list
-                    points.add(new LatLng(lat, lng));
-                }
-
-                //Get time taken for path
-                long startTime = pathJSON.getJSONObject(0).getLong("Time");
-                long endTime = pathJSON.getJSONObject(pathJSON.length() - 1).getLong("Time");
-                int timeTaken = (int) (endTime - startTime);
-
-                //Draw pathways and make clickable
-                Polyline path = gMap.addPolyline(new PolylineOptions().addAll(points).width(10).color(Color.RED));
-                path.setClickable(true);
-                pathLines.add(path);
-
-            }
-
-        } catch (Exception e) {
-            e.getStackTrace();
-        }
-    }
-
     //Removes any paths from the list that don't have node as the start or end node
     private void filterPathsNode(LatLng node) {
 
@@ -200,23 +156,59 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
             }
 
         }
-
         //Remove paths in buffer from global list
         paths.removeAll(pathsToRemove);
-        //createUnitedPath(paths);
+
     }
 
-    void createUnitedPath(ArrayList<String> paths) {
-        if (paths.size() >= 2) {
-            int len = paths.size();
-            LatLng point1;
-            LatLng point2;
-            JSONArray pathLines = new JSONArray(paths);
-            //JSONObject comparePoint1 = pathLines.getJSONObject();
-            //JSONObject comparePoint2 = pathLines.getJSONObject();
+    //Plot paths
+    void plotPaths(LatLng markerPosition) {
+
+        gMap.clear();
+
+        filterPathsNode(markerPosition);
+
+        //Iterate through List of JSON arrays
+        //Each JSON array is 1 pathway
+        try {
             for (int i = 0; i < paths.size(); i++) {
-                //point1 = new LatLng();
+
+                //Decode JSON array into polyline
+                JSONArray pathJSON = new JSONArray(paths.get(i));
+
+                ArrayList<LatLng> points = new ArrayList<>();
+                //Get JSON array into list of points
+                for (int j = 0; j < pathJSON.length(); j++) {
+                    //Get data from JSON object
+                    JSONObject point = pathJSON.getJSONObject(j);
+                    double lat = point.getDouble("Latitude");
+                    double lng = point.getDouble("Longitude");
+
+                    //Make point from JSON data and add to list
+                    points.add(new LatLng(lat, lng));
+                }
+
+                //Get time taken for path
+                long startTime = pathJSON.getJSONObject(0).getLong("Time");
+                long endTime = pathJSON.getJSONObject(pathJSON.length() - 1).getLong("Time");
+                int timeTaken = (int) (endTime - startTime);
+                double pathTime = timeTaken / 1000;
+                int minutes = (int) pathTime / 60;
+                double seconds = pathTime - (60 / minutes);
+                String mySeconds = String.format("%1.0f", seconds);
+                String totalTime = "Path Time: " + minutes + "" + ":" + mySeconds + "";
+
+
+
+                //Draw pathways and make clickable
+                Polyline path = gMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.BLUE));
+                path.setClickable(true);
+                path.setTag(totalTime);
+                pathLines.add(path);
             }
+
+        } catch (Exception e) {
+            e.getStackTrace();
         }
     }
 
