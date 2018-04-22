@@ -9,7 +9,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -43,6 +42,7 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
         points = new ArrayList<LatLng>();
 
     }
+
 
     @Override
     protected Void doInBackground(Void... voids) {
@@ -92,14 +92,16 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
         return null;
     }
 
+
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
 
-        createNodes();
-        plotNodes();
+        createNodes();  //When it's done getting the list of buildings and coordiantes, create the nodes
+        plotNodes();    //Place the nodes on the map for the users to see
 
     }
+
 
     //This method creates nodes
     private void createNodes() {
@@ -108,25 +110,28 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
         }
     }
 
+
     //This method places the nodes on the map
-    void plotNodes() {
+    public void plotNodes() {
         if (points.isEmpty()) { return; }
 
         LatLng mapStart = points.get(0);
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mapStart, 16.0f));
 
         //Display a marker at each node
-        for (LatLng point : points) {
+        for (int i = 0; i < buildingList.size(); i++) {
 
-            //Draw circle around node; Clickable to filter paths
+            //Draw circle around node; Clickable to get building names
             Circle circle = gMap.addCircle(new CircleOptions()
-                    .center(point)
+                    .center(points.get(i))
                     .radius(120 / 2));
 
-            circle.setClickable(false);      //Let's users click on buildings to see names
-            circle.setStrokeWidth(1f);       //For debugging purposes
-            circle.setFillColor(Color.TRANSPARENT);
+            circle.setClickable(true);              //Let's users click on buildings to see names
+            circle.setStrokeWidth(5f);              //For debugging purposes
+            circle.setFillColor(Color.TRANSPARENT); //Set the circles to transparent to let users see the map
+            circle.setTag(buildingList.get(i));     //Give the circle a string tag
         }
-
     }
+
+
 }
