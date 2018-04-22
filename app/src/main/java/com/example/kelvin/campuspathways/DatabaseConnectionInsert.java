@@ -12,12 +12,12 @@ import java.sql.Statement;
  * Used to asynchronously insert data into the database
  */
 
-public class DatabaseConnectionInsert extends AsyncTask<String, Void, Void> {
+class DatabaseConnectionInsert extends AsyncTask<String, Void, Void> {
 
-    private String query;//Query to be executed
+    private final String query;//Query to be executed
 
     //Only constructor
-    public DatabaseConnectionInsert(String query) {
+    DatabaseConnectionInsert(String query) {
         this.query = query;
     }
 

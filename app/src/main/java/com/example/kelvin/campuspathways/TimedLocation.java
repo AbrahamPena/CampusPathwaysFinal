@@ -8,13 +8,13 @@ import com.google.android.gms.maps.model.LatLng;
  * Used for storage of paths in database
  */
 
-public class TimedLocation {
+class TimedLocation {
 
-    private LatLng location;//Location at instant
-    private long timestamp;//Time of instant
+    private final LatLng location;//Location at instant
+    private final long timestamp;//Time of instant
 
     //Only constructor
-    public TimedLocation(LatLng location) {
+    TimedLocation(LatLng location) {
         this.location = location;
         timestamp = System.currentTimeMillis();
     }
@@ -24,7 +24,7 @@ public class TimedLocation {
         return location;
     }
 
-    public long getTimestamp() {
+    long getTimestamp() {
         return timestamp;
     }
 

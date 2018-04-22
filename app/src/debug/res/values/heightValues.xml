@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <integer-array name="height_feet">
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-    </integer-array>
-
-    <integer-array name="height_inches">
+    <integer-array name="height_inches" tools:keep="@array/height_inches">
         <item>0</item>
         <item>1</item>
         <item>2</item>

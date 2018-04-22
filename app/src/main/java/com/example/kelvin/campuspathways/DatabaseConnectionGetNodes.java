@@ -22,24 +22,24 @@ import java.util.ArrayList;
  * The nodes will serve as the starting and ending points for users to choose from
  */
 
-public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
+class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
 
     //Variables to be used
-    private GoogleMap gMap;
-    private ArrayList<Double> latitudeList;     //Buffer the latitudes
-    private ArrayList<Double> longitudeList;    //Buffer the longitudes
-    ArrayList<String> buildingList;             //Buffer the list of buildings, public so dropdown menu can be populated
-    ArrayList<LatLng> points;                   //Coordinates for nodes, public to allow point selection
+    private final GoogleMap gMap;
+    private final ArrayList<Double> latitudeList;     //Buffer the latitudes
+    private final ArrayList<Double> longitudeList;    //Buffer the longitudes
+    final ArrayList<String> buildingList;             //Buffer the list of buildings, public so dropdown menu can be populated
+    final ArrayList<LatLng> points;                   //Coordinates for nodes, public to allow point selection
 
     //Constructor
     DatabaseConnectionGetNodes(GoogleMap map) {
 
         //Initialize all the variables
         gMap = map;
-        latitudeList = new ArrayList<Double>();
-        longitudeList = new ArrayList<Double>();
-        buildingList = new ArrayList<String>();
-        points = new ArrayList<LatLng>();
+        latitudeList = new ArrayList<>();
+        longitudeList = new ArrayList<>();
+        buildingList = new ArrayList<>();
+        points = new ArrayList<>();
 
     }
 
@@ -57,7 +57,7 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
 
             //Create query
             String query = "SELECT Building_name, Latitude, Longitude FROM Buildings";
-            String pathQuery = "SELECT * FROM Pathways";
+            @SuppressWarnings("unused") String pathQuery = "SELECT * FROM Pathways";
 
             //Connect to database
             Connection dbConnection = DriverManager.getConnection("jdbc:jtds:sqlserver://" + dns +
@@ -112,7 +112,7 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
 
 
     //This method places the nodes on the map
-    public void plotNodes() {
+    void plotNodes() {
         if (points.isEmpty()) { return; }
 
         LatLng mapStart = points.get(0);

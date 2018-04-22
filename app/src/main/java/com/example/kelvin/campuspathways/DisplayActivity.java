@@ -16,11 +16,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class DisplayActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    //UI Elements
-    Button btDiscover, btNodes;
-    Context thisContext;
+    private Context thisContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +46,9 @@ public class DisplayActivity extends FragmentActivity implements OnMapReadyCallb
 
     }
 
-    public void init(){
-        btDiscover = findViewById(R.id.btDiscoverPathFromDisplay);
-        btNodes = findViewById(R.id.btNodesFromDisplay);
+    private void init(){
+        Button btDiscover = findViewById(R.id.btDiscoverPathFromDisplay);
+        Button btNodes = findViewById(R.id.btNodesFromDisplay);
 
         //Change to Discover Activity
         btDiscover.setOnClickListener(new View.OnClickListener() {
@@ -81,7 +80,7 @@ public class DisplayActivity extends FragmentActivity implements OnMapReadyCallb
 
     //Asks User for runtime permission to access location
     //Required for discovery
-    public boolean getPermissions() {
+    private boolean getPermissions() {
 
         //Check if permission granted
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

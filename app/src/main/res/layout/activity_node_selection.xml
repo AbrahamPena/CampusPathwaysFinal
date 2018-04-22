@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_node_selection"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,31 +8,36 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="   Select a Starting Location:" />
+        android:text="   Select a Starting Location:"
+        tools:ignore="HardcodedText" />
 
     <Spinner
         android:id="@+id/startLocation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select Starting Location" />
+        android:text="Select Starting Location"
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="   Select an Ending Location:" />
+        android:text="   Select an Ending Location:"
+        tools:ignore="HardcodedText" />
 
     <Spinner
         android:id="@+id/endLocation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select Ending Location" />
+        android:text="Select Ending Location"
+        tools:ignore="HardcodedText" />
 
     <Button
         android:id="@+id/selectPath"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="getPathways"
-        android:text="Find Pathways" />
+        android:text="Find Pathways"
+        tools:ignore="HardcodedText" />
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"

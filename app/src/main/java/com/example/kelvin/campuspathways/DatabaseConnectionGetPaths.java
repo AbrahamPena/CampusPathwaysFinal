@@ -19,6 +19,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 /**
@@ -29,18 +30,19 @@ import java.util.ArrayList;
  * and ending location criteria
  */
 
-public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
+@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
 
     //List of paths between 2 selected nodes
-    private ArrayList<String> paths;
+    private final ArrayList<String> paths;
     //List of all paths
-    private ArrayList<String> allPaths;
+    private final ArrayList<String> allPaths;
     //List of paths
-    private ArrayList<LatLng> points;
+    private final ArrayList<LatLng> points;
     //List of all visible paths
-    private ArrayList<Polyline> pathLines;
+    private final ArrayList<Polyline> pathLines;
     //Map to use
-    private GoogleMap gMap;
+    private final GoogleMap gMap;
 
     DatabaseConnectionGetPaths(GoogleMap map) {
 
@@ -136,7 +138,7 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
         for (String path : paths) {
 
             //Parse JSON to get start and top points
-            JSONArray pathJSON = null;
+            JSONArray pathJSON;
             try {
                 pathJSON = new JSONArray(path);
 
@@ -204,7 +206,7 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
                 int minutes = (int) pathTime / 60;      //Convert from double to minutes
                 double seconds = pathTime - (60 / minutes); //Get the amount of seconds
                 
-                String mySeconds = String.format("%1.0f", seconds);     //Format the time
+                String mySeconds = String.format(Locale.getDefault(), "%1.0f", seconds);     //Format the time
                 //Set string when user wants to see the time of the pathway taken
                 String totalTime = "Path Time: " + minutes + "" + ":" + mySeconds + "";
 

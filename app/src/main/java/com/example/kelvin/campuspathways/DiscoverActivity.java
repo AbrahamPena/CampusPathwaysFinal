@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -17,7 +16,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -35,8 +33,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.maps.android.SphericalUtil;
@@ -46,8 +42,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -59,10 +53,10 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     [2] https://www.built.io/blog/applying-low-pass-filter-to-android-sensor-s-readings
     */
 
-    Context thisContext = this;
+    private final Context thisContext = this;
     //UI Elements
     private TextView tvDiscoverStatus;
-    private Button btPathControl, btDisplayPaths, btNodes;
+    private Button btPathControl;
     private Spinner dropdownFeet, dropdownInches;
 
     //Sensors
@@ -74,8 +68,8 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     private float[] lastAccel = new float[3];
     private float[] lastMagnet = new float[3];
     private boolean accelSet = false, magnetSet = false;
-    private float[] rotation = new float[9];
-    private float[] orientation = new float[3];
+    private final float[] rotation = new float[9];
+    private final float[] orientation = new float[3];
     private float currentAngle = 0f;
     private GeomagneticField geomagneticField;
 
@@ -116,15 +110,15 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
 
     //Initialize elements
-    public void initObjects() {
+    private void initObjects() {
 
         //Path buffer
         userPath = new ArrayList<>();
 
         //UI Elements
         btPathControl = findViewById(R.id.btPathControl);
-        btDisplayPaths = findViewById(R.id.btDisplayPathFromDiscover);
-        btNodes = findViewById(R.id.btNodesFromDiscover);
+        Button btDisplayPaths = findViewById(R.id.btDisplayPathFromDiscover);
+        Button btNodes = findViewById(R.id.btNodesFromDiscover);
         tvDiscoverStatus = findViewById(R.id.tvDiscoverStatus);
         dropdownFeet = findViewById(R.id.dropdownDiscoverFeet);
         dropdownInches = findViewById(R.id.dropdownDiscoverInches);
@@ -330,7 +324,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
     //Filters sensor data to improve accuracy
     //Based on code from [2]
-    protected float[] filter(float[] in, float[] out) {
+    private float[] filter(float[] in, float[] out) {
 
         final float ALPHA = (float) 0.25;//Filtering constant
 
@@ -345,7 +339,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     }
 
     //Asks User for runtime permission to access location
-    public boolean getPermissions() {
+    private boolean getPermissions() {
 
         //Check if permission granted
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -453,6 +447,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     }
 
     //Returns Unique ID for each device
+    @SuppressLint("HardwareIds")
     private String getAndroidID() {
 
         return Settings.Secure.getString(thisContext.getContentResolver(), Settings.Secure.ANDROID_ID)
@@ -461,7 +456,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
 
     //This method gets the starting position for the tracker
-    public void onSuccess(Location location) {
+    private void onSuccess(Location location) {
         if (location != null) {
 
             //Get starting location
@@ -486,7 +481,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
      */
 
     //This class creates a request for how often we want to get a reading from the GPS receiver
-    void createLocationRequest() {
+    private void createLocationRequest() {
         //Create an object to request location and set parameters
         locationRequest = new LocationRequest();
         locationRequest.setInterval(600);//Preferred update rate, milliseconds
@@ -495,7 +490,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     }
 
     //We get our starting location
-    void getStartLocation() {
+    private void getStartLocation() {
         //Check location permission and prompt if required
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
@@ -512,16 +507,16 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         });
     }
 
-    void getCurrentLocationSettings() {
+    private void getCurrentLocationSettings() {
         //Create location request with created location object
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
 
         SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        @SuppressWarnings("unused") Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
     }
 
 
-    void startLocationUpdates() {
+    private void startLocationUpdates() {
         //Check for permissions
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);

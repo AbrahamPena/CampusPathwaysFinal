@@ -27,14 +27,15 @@ import java.util.ArrayList;
  * Used to asynchronously select data from the database
  */
 
-public class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
+@SuppressWarnings("unused")
+class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
 
-    private String query;//Query to be performed
-    private GoogleMap googleMap;//Map to be used for drawing of paths
+    private final String query;//Query to be performed
+    private final GoogleMap googleMap;//Map to be used for drawing of paths
 
-    private ArrayList<String> paths;//List of paths to be drawn
-    private ArrayList<Integer> pathTimes;//List of time taken for each path, in milliseconds
-    private ArrayList<Double> userHeights;//List of distances for each path
+    private final ArrayList<String> paths;//List of paths to be drawn
+    private final ArrayList<Integer> pathTimes;//List of time taken for each path, in milliseconds
+    private final ArrayList<Double> userHeights;//List of distances for each path
     private LatLng mapStart;//Sets camera start
 
     private Marker m1, m2;//Markers on start and end of selected path
@@ -72,7 +73,7 @@ public class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
             while (resultSet.next()) {
 
                 //4 Columns: Android_ID, Step_Length, Path_ID, User_Path
-                String Android_ID = resultSet.getString("Android_ID");
+                @SuppressWarnings("unused") String Android_ID = resultSet.getString("Android_ID");
                 double step_length = resultSet.getDouble("Step_Length");
                 int path_id = resultSet.getInt("Path_ID");
                 String path = resultSet.getString("User_Path");

@@ -14,9 +14,7 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class StartActivity extends AppCompatActivity {
 
-    //UI Elements
-    Button btDiscover, btDisplay, btNodes;
-    Context thisContext;//Used when switching activities
+    private Context thisContext;//Used when switching activities
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,10 +30,10 @@ public class StartActivity extends AppCompatActivity {
     }
 
     //Initialize UI elements and event listeners
-    public void init(){
-        btDisplay = findViewById(R.id.btShowMap);
-        btDiscover = findViewById(R.id.btTrackPath);
-        btNodes = findViewById(R.id.btNodesFromStart);
+    private void init(){
+        Button btDisplay = findViewById(R.id.btShowMap);
+        Button btDiscover = findViewById(R.id.btTrackPath);
+        Button btNodes = findViewById(R.id.btNodesFromStart);
 
         btDisplay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,7 +71,7 @@ public class StartActivity extends AppCompatActivity {
 
     //Asks User for runtime permission to access location
     //Required for discovery
-    public boolean getPermissions() {
+    private boolean getPermissions() {
 
         //Check if permission granted
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

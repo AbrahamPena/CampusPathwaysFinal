@@ -2,7 +2,6 @@ package com.example.kelvin.campuspathways;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -28,8 +27,6 @@ import java.util.concurrent.TimeoutException;
 
 public class NodeSelectionActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    //Variables to hold data
-    private GoogleMap mMap;
     private Spinner startLocation;
     private Spinner endLocation;
     private int startingLocationIndex;
@@ -64,21 +61,19 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
     @Override
     public void onMapReady(GoogleMap googleMap) {
         //Initialize the map
-        mMap = googleMap;
 
         //Initialize the separate threads
-        databaseConnection = new DatabaseConnectionGetNodes(mMap);
-        databasePathConnection = new DatabaseConnectionGetPaths(mMap);
+        databaseConnection = new DatabaseConnectionGetNodes(googleMap);
+        databasePathConnection = new DatabaseConnectionGetPaths(googleMap);
 
         //Run the separate threads
         databaseConnection.execute();
         databasePathConnection.execute();
 
         //We delay the main thread to allow the separate thread enough time to populate the list for the spinner
-        try { databaseConnection.get(1500, TimeUnit.MILLISECONDS); }
-        catch (InterruptedException e) { e.printStackTrace(); }
-        catch (ExecutionException e) { e.printStackTrace(); }
-        catch (TimeoutException e) { e.printStackTrace(); }
+        try { databaseConnection.get(1500, TimeUnit.MILLISECONDS); } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
+        }
 
         //Add names of building to the list for the spinner
         final ArrayList<String> buildingList = databaseConnection.buildingList;
@@ -130,7 +125,7 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
         });
 
         //Listener for the circle click
-        mMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
+        googleMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
             @Override
             public void onCircleClick(Circle circle) {
                 String buildingName = (String)circle.getTag();  //Get the tag and convert to string
@@ -139,7 +134,7 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
         });
 
         //Listener for the PolyLine click
-        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+        googleMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(Polyline polyline) {
                 String timeTaken = (String)polyline.getTag();   //Get the tag and convert to string
@@ -151,7 +146,7 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
 
 
     //This method will allow the button to get the pathways and display them
-    public void getPathways(View v) {
+    public void getPathways(@SuppressWarnings("unused") View v) {
         //First we reset all the pathways
         databasePathConnection.resetPaths();
         //We get the pathways we desire
@@ -162,7 +157,7 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
     
 
     //This method prints out the tags of either the circles or pathlines
-    void printTag(String text) {
+    private void printTag(String text) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
