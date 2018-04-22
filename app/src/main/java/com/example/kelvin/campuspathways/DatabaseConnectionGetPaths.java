@@ -23,6 +23,10 @@ import java.util.ArrayList;
 
 /**
  * Created by Abraham on 4/13/18.
+ * This class gets the pathways in the database and displays
+ * them on the NodeSelectionActivity.java. The purpose of this
+ * class is to get all the pathways that meet the starting
+ * and ending location criteria
  */
 
 public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
@@ -98,6 +102,7 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
 
             }
 
+            //Store all the pathways in an arraylist
             allPaths.addAll(paths);
 
             //Close connection to database
@@ -107,15 +112,16 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
             Log.w("Error", "" + e.getMessage());
             return null;
         }
-
         return null;
     }
+
 
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
 
     }
+
 
     //Removes any paths from the list that don't have node as the start or end node
     private void filterPathsNode(LatLng node) {
@@ -150,16 +156,14 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
                     pathsToRemove.add(path);
 
                 }
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
         }
         //Remove paths in buffer from global list
         paths.removeAll(pathsToRemove);
-
     }
+
 
     //Plot paths
     void plotPaths(LatLng markerPosition) {
@@ -189,22 +193,27 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
                 }
 
                 //Get time taken for path
+                //First we get the start time from the JSON string and convert to a long
                 long startTime = pathJSON.getJSONObject(0).getLong("Time");
+                //We get the end time from the JSON string and convert to a long
                 long endTime = pathJSON.getJSONObject(pathJSON.length() - 1).getLong("Time");
+                
+                //We get the time as a long from start to end
                 int timeTaken = (int) (endTime - startTime);
-                double pathTime = timeTaken / 1000;
-                int minutes = (int) pathTime / 60;
-                double seconds = pathTime - (60 / minutes);
-                String mySeconds = String.format("%1.0f", seconds);
+                double pathTime = timeTaken / 1000;     //Convert time from long to double
+                int minutes = (int) pathTime / 60;      //Convert from double to minutes
+                double seconds = pathTime - (60 / minutes); //Get the amount of seconds
+                
+                String mySeconds = String.format("%1.0f", seconds);     //Format the time
+                //Set string when user wants to see the time of the pathway taken
                 String totalTime = "Path Time: " + minutes + "" + ":" + mySeconds + "";
-
 
 
                 //Draw pathways and make clickable
                 Polyline path = gMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.BLUE));
-                path.setClickable(true);
-                path.setTag(totalTime);
-                pathLines.add(path);
+                path.setClickable(true);    //Let the users click on the pathways
+                path.setTag(totalTime);     //We set the time as a string tag
+                pathLines.add(path);        //We add the filtered path into the arraylist
             }
 
         } catch (Exception e) {
@@ -212,7 +221,8 @@ public class DatabaseConnectionGetPaths extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    //Reset paths to all paths and reset counter
+
+    //Reset paths to all paths
     void resetPaths() {
 
         //Remove drawn lines
