@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -23,7 +25,6 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -34,10 +35,10 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-
-
 import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONArray;
@@ -45,6 +46,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -75,13 +78,13 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
     private float[] orientation = new float[3];
     private float currentAngle = 0f;
     private GeomagneticField geomagneticField;
+
     //List of points in user path
     private ArrayList<TimedLocation> userPath;
 
     private int userHeightInches = 48;//User height; Used in step length calculation
     private boolean tracking = false;//Checks whether user is being tracked
     private String androidId;
-
 
     private int count = 0;
 
@@ -106,7 +109,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
         getCurrentLocationSettings();
         startLocationUpdates();
-
 
         Toast.makeText(thisContext, "Currently finding your location", Toast.LENGTH_LONG).show();
 
@@ -225,10 +227,8 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                         }
                     }
 
-
                     Toast.makeText(thisContext, "Starting location found, we are now collecting your coordinates", Toast.LENGTH_LONG).show();
                     onSuccess(currentLocation);   //We get our starting point using the tracker
-
 
                     //Update button text and boolean
                     btPathControl.setText(R.string.stopPathDisc);
@@ -268,9 +268,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                     String st = "'" + pathJSON.toString() + "'";
 
                     //Query 1: Create or update User
-
                     double step_length = (userHeightInches + 1.3) * 0.0254 * 0.413;//Step length, in meters
-
                     String query1 = "IF EXISTS(SELECT * FROM Users where Android_ID = '" + androidId
                             + "') \n"
                             + " UPDATE Users SET Step_Length = " + step_length
@@ -330,7 +328,6 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
     }
 
-
     //Filters sensor data to improve accuracy
     //Based on code from [2]
     protected float[] filter(float[] in, float[] out) {
@@ -389,6 +386,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
             magnetSet = true;
         }
 
+        //Gets the current direction of user using the magnet sensor
         if (accelSet && magnetSet && geomagneticField != null) {
             SensorManager.getRotationMatrix(rotation, null, lastAccel, lastMagnet);
             SensorManager.getOrientation(rotation, orientation);
@@ -445,6 +443,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
     }
 
+    //Unregister the listeners for the sensors if they are not being used at the moment
     protected void onPause() {
         super.onPause();
         sensorManager.unregisterListener(this, stepSensor);
@@ -459,6 +458,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         return Settings.Secure.getString(thisContext.getContentResolver(), Settings.Secure.ANDROID_ID)
                 + Build.SERIAL;
     }
+
 
     //This method gets the starting position for the tracker
     public void onSuccess(Location location) {
@@ -481,6 +481,11 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         }
     }
 
+    /*
+     *The methods below are for the GPS receiver
+     */
+
+    //This class creates a request for how often we want to get a reading from the GPS receiver
     void createLocationRequest() {
         //Create an object to request location and set parameters
         locationRequest = new LocationRequest();
@@ -489,6 +494,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);//Prioritize accuracy over battery usage; Accurate to a few feet (in theory)
     }
 
+    //We get our starting location
     void getStartLocation() {
         //Check location permission and prompt if required
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -514,6 +520,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
     }
 
+
     void startLocationUpdates() {
         //Check for permissions
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -521,4 +528,5 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
     }
+
 }
