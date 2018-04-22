@@ -93,6 +93,11 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
         startLocation.setAdapter(dataAdapter);
         endLocation.setAdapter(dataAdapter);
 
+        /*
+         * Above is code that deals with initializing the map and getting data for the nodes and pathways
+         * Below is code that deals listeners for the drop down menu, circles, and polylines
+         */
+
 
         //Listener for the drop down menu
         startLocation.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -104,7 +109,9 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {}
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                //Nothing needs to be done
+            }
         });
 
         //Listener for the drop down menu
@@ -117,40 +124,45 @@ public class NodeSelectionActivity extends FragmentActivity implements OnMapRead
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {}
-        });
-
-        mMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
-            @Override
-            public void onCircleClick(Circle circle) {
-                String buildingName = (String)circle.getTag();
-                printBuilding(buildingName);
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                //Nothing needs to be done
             }
         });
 
+        //Listener for the circle click
+        mMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
+            @Override
+            public void onCircleClick(Circle circle) {
+                String buildingName = (String)circle.getTag();  //Get the tag and convert to string
+                printTag(buildingName);                         //Print as a toast
+            }
+        });
+
+        //Listener for the PolyLine click
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(Polyline polyline) {
-                String timeTaken = (String)polyline.getTag();
-                printBuilding(timeTaken);
-                //Log.d("TAG", "onPolylineClick: touch");
+                String timeTaken = (String)polyline.getTag();   //Get the tag and convert to string
+                printTag(timeTaken);                            //Print as a toast
             }
         });
 
     }
 
 
-        //This method will allow the button to get the pathways and display them
-        public void getPathways(View v) {
-            //First we reset all the pathways
-            databasePathConnection.resetPaths();
-            //We get the pathways we desire
-            databasePathConnection.plotPaths(pointStart);
-            databasePathConnection.plotPaths(pointEnd);
-            databaseConnection.plotNodes(); //Plot nodes since the plot paths clears the google map before placing the paths
-        }
+    //This method will allow the button to get the pathways and display them
+    public void getPathways(View v) {
+        //First we reset all the pathways
+        databasePathConnection.resetPaths();
+        //We get the pathways we desire
+        databasePathConnection.plotPaths(pointStart);
+        databasePathConnection.plotPaths(pointEnd);
+        databaseConnection.plotNodes(); //Plot nodes since the plot paths clears the google map before placing the paths
+    }
+    
 
-    void printBuilding(String text) {
+    //This method prints out the tags of either the circles or pathlines
+    void printTag(String text) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
