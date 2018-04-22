@@ -128,12 +128,5 @@ public class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
             circle.setFillColor(Color.TRANSPARENT);
         }
 
-        //We place all the markers on the map
-        for (int i = 0; i < buildingList.size(); i++) {
-
-            gMap.addMarker(new MarkerOptions().position(points.get(i)).title(buildingList.get(i)));
-
-        }
-
     }
 }
