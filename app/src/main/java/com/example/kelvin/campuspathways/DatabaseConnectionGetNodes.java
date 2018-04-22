@@ -24,12 +24,12 @@ import java.util.ArrayList;
 
 class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
 
+    final ArrayList<String> buildingList;             //Buffer the list of buildings, public so dropdown menu can be populated
+    final ArrayList<LatLng> points;                   //Coordinates for nodes, public to allow point selection
     //Variables to be used
     private final GoogleMap gMap;
     private final ArrayList<Double> latitudeList;     //Buffer the latitudes
     private final ArrayList<Double> longitudeList;    //Buffer the longitudes
-    final ArrayList<String> buildingList;             //Buffer the list of buildings, public so dropdown menu can be populated
-    final ArrayList<LatLng> points;                   //Coordinates for nodes, public to allow point selection
 
     //Constructor
     DatabaseConnectionGetNodes(GoogleMap map) {
@@ -132,6 +132,5 @@ class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
             circle.setTag(buildingList.get(i));     //Give the circle a string tag
         }
     }
-
 
 }
