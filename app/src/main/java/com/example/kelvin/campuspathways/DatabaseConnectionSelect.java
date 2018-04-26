@@ -37,6 +37,7 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
     private final ArrayList<Integer> pathTimes;//List of time taken for each path, in milliseconds
     private final ArrayList<Double> userHeights;//List of distances for each path
     private LatLng mapStart;//Sets camera start
+    private double timeTaken, distance;
 
     private Marker m1, m2;//Markers on start and end of selected path
 
@@ -148,9 +149,13 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
                     LatLng end = polyline.getPoints().get(polyline.getPoints().size() - 1);
                     String ss = polyline.getId().substring(2);//String of line index
                     int i = Integer.parseInt(ss);//Path index
-                    double timeTaken = (pathTimes.get(i)) / 1000.0;//Time taken for path, seconds
-                    double distance = userHeights.get(i) * polyline.getPoints().size() * 2;
-
+                    try {
+                        timeTaken = (pathTimes.get(i)) / 1000.0;//Time taken for path, seconds
+                        distance = userHeights.get(i) * polyline.getPoints().size() * 2;
+                    }
+                    catch (Exception e) {
+                        
+                    }
                     //Remove markers of previous path when new one clicked
                     if (m1 != null && m2 != null) {
                         m1.remove();
