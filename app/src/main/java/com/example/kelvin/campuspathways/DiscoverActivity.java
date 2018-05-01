@@ -11,6 +11,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -222,7 +224,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                     }
 
                     Toast.makeText(thisContext, "Starting location found, we are now collecting your coordinates", Toast.LENGTH_LONG).show();
-                    onSuccess(currentLocation);   //We get our starting point using the tracker
+                    onSuccess(currentLocation);
 
                     //Update button text and boolean
                     btPathControl.setText(R.string.stopPathDisc);
@@ -231,6 +233,16 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
 
                 //Currently tracking; Stop
                 else{
+
+                    ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+                    NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                    boolean isConnectedToInternet = networkInfo != null && networkInfo.isConnected();
+
+                    //Not connected to internet; Don't send data
+                    if(!isConnectedToInternet){
+                        Toast.makeText(thisContext,"Not connected to internet. Error", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
                     //We deactivate the gps receiver whenever when we stop collecting paths
                     fusedLocationProviderClient.removeLocationUpdates(locationCallback);
@@ -262,7 +274,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
                     String st = "'" + pathJSON.toString() + "'";
 
                     //Query 1: Create or update User
-                    double step_length = (userHeightInches + 1.3) * 0.0254 * 0.413;//Step length, in meters
+                    double step_length = (userHeightInches + 0.6) * 0.0254 * 0.413;//Step length, in meters
                     String query1 = "IF EXISTS(SELECT * FROM Users where Android_ID = '" + androidId
                             + "') \n"
                             + " UPDATE Users SET Step_Length = " + step_length
@@ -399,7 +411,7 @@ public class DiscoverActivity extends AppCompatActivity implements SensorEventLi
             //Else, we collect data as usual
             else {
 
-                double stepLength = (((userHeightInches + 1.3) * 0.413) * 0.0254);
+                double stepLength = (((userHeightInches + 0.6) * 0.413) * 0.0254);
 
                 LatLng lastLocation = userPath.get(userPath.size() - 1).getLocation();
 

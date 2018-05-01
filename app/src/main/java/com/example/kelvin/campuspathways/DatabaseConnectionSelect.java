@@ -38,6 +38,8 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
     private final ArrayList<Double> userHeights;//List of distances for each path
     private LatLng mapStart;//Sets camera start
     private double timeTaken, distance;
+    String timeInfo;
+    String distanceInfo;
 
     private Marker m1, m2;//Markers on start and end of selected path
 
@@ -131,6 +133,16 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
 
                 //Draw pathways and make clickable
                 Polyline path = googleMap.addPolyline(new PolylineOptions().addAll(points).width(10).color(Color.RED));
+                int minutesTaken = (timeTaken /1000) / 60;
+                double extraSeconds = timeTaken - (60 * minutesTaken);
+                double distanceTraveled = userHeights.get(i) * path.getPoints().size() * 2;
+
+                timeInfo = minutesTaken + " minutes, " + (int) extraSeconds + " seconds \n";
+                distanceInfo = distanceTraveled + " meters";
+                String pathInfo = minutesTaken + " minutes, " + (int) extraSeconds + " seconds \n"
+                        + distanceTraveled + " meters";
+                String myDistance = distanceTraveled + " meters";
+                path.setTag(myDistance);
                 path.setClickable(true);
 
             }
@@ -138,55 +150,12 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
             //Move map to 1st point of 1st path
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mapStart, 20.0f));
 
-            //Make line interact with click
-            googleMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
-                @SuppressLint("DefaultLocale")
-                @Override
-                public void onPolylineClick(Polyline polyline) {
-
-                    //Get start and end points of line
-                    LatLng start = polyline.getPoints().get(0);
-                    LatLng end = polyline.getPoints().get(polyline.getPoints().size() - 1);
-                    String ss = polyline.getId().substring(2);//String of line index
-                    int i = Integer.parseInt(ss);//Path index
-                    try {
-                        timeTaken = (pathTimes.get(i)) / 1000.0;//Time taken for path, seconds
-                        distance = userHeights.get(i) * polyline.getPoints().size() * 2;
-                    }
-                    catch (Exception e) {
-                        
-                    }
-                    //Remove markers of previous path when new one clicked
-                    if (m1 != null && m2 != null) {
-                        m1.remove();
-                        m1 = null;
-                        m2.remove();
-                        m2 = null;
-                    }
-
-                    //Get string detailing time taken
-                    String timeInfo, distInfo;
-                    int minutesTaken = (int) timeTaken / 60;
-                    double extraSeconds = timeTaken - (60 * minutesTaken);
-                    timeInfo = "Time taken: " + minutesTaken + " minutes, " + (int) extraSeconds
-                            + " seconds";
-                    distInfo = "Distance: " + distance + " meters";
-
-                    //Place markers at start and end of selected path
-                    m1 = googleMap.addMarker(new MarkerOptions().position(start)
-                            .title("Pathway #" + (i + 1) + " start")
-                            .snippet(timeInfo).snippet(distInfo));
-                    m2 = googleMap.addMarker(new MarkerOptions().position(end)
-                            .title("Pathway #" + (i + 1) + " end")
-                            .snippet(timeInfo));
-
-                }
-            });
-
 
         } catch (Exception e) {
             Log.w("Error", "" + e.getMessage());
         }
 
     }
+
+
 }

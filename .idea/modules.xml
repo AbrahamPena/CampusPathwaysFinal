@@ -3,7 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://C:\Users\Kelvin\AndroidStudioProjects\CampusPathwaysFinal\CampusPathways.iml" filepath="C:\Users\Kelvin\AndroidStudioProjects\CampusPathwaysFinal\CampusPathways.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/CampusPathwaysFinal.iml" filepath="$PROJECT_DIR$/.idea/CampusPathwaysFinal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CampusPathwaysFinal.iml" filepath="$PROJECT_DIR$/CampusPathwaysFinal.iml" />
+      <module fileurl="file://C:\Users\Sleepy\Documents\GitHub\CampusPathwaysFinal\.idea\CampusPathwaysFinal.iml" filepath="C:\Users\Sleepy\Documents\GitHub\CampusPathwaysFinal\.idea\CampusPathwaysFinal.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

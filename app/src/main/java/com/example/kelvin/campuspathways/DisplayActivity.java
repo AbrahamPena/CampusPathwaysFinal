@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -13,6 +14,14 @@ import android.widget.Toast;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -20,6 +29,9 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 public class DisplayActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private Context thisContext;
+    private DatabaseConnectionSelect databaseConnectionSelect;
+    private Marker m1, m2;//Markers on start and end of selected path
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +48,51 @@ public class DisplayActivity extends FragmentActivity implements OnMapReadyCallb
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(final GoogleMap googleMap) {
 
         //Once map loads, plot all paths
         String query = "SELECT Users.Android_ID, Step_Length, Path_ID, User_Path" +
                 " FROM Users FULL OUTER JOIN Pathways ON Users.Android_ID = Pathways.Android_ID;";
 
-        new DatabaseConnectionSelect(query, googleMap).execute();
+        databaseConnectionSelect = (DatabaseConnectionSelect) new DatabaseConnectionSelect(query, googleMap).execute();
+        try {
+            databaseConnectionSelect.get(1500, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
 
+        googleMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+
+            @Override
+            public void onPolylineClick(Polyline polyline) {
+
+                //Log.d("TAG", "onPolylineClick: Starting: " + startingPoint + " Ending: " + endingPoint);
+                if (m1 != null && m2 != null) {
+                    m1.remove();
+                    m1 = null;
+                    m2.remove();
+                    m2 = null;
+                }
+                LatLng startingPoint = polyline.getPoints().get(0);
+                LatLng endingPoint = polyline.getPoints().get(polyline.getPoints().size()-1);
+                String ss = polyline.getId().substring(2);//String of line index
+                int i = Integer.parseInt(ss);//Path index
+
+                String info = (String) polyline.getTag();
+
+                    m1 = googleMap.addMarker(new MarkerOptions().position(startingPoint)
+                            .title("Pathway #" + (i + 1) + " start\n")
+                            .snippet(info));
+                    m2 = googleMap.addMarker(new MarkerOptions().position(endingPoint)
+                            .title("Pathway #" + (i + 1) + " end\n")
+                            .snippet(info));
+
+            }
+        });
     }
 
     private void init(){
@@ -75,6 +124,7 @@ public class DisplayActivity extends FragmentActivity implements OnMapReadyCallb
                 startActivity(intent);
             }
         });
+
 
     }
 
