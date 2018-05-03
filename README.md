@@ -77,6 +77,7 @@ You are now ready to begin collecting and retrieving data!
    Problem seems to have been fixed and testing has not showed this to be a problem.
 
 ---Wish list---
+
 These are some of the functionality we wished to implement but were unsuccessful due to time
 1) Pathway ranking system
    Allow the user to view pathways based on their choice of either time or distance
