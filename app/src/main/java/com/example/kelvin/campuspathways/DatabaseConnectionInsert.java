@@ -28,7 +28,7 @@ class DatabaseConnectionInsert extends AsyncTask<String, Void, Void> {
         try {
 
             //Connection information
-            String dns = "on-campus-navigation.caqb3uzoiuo3.us-east-1.rds.amazonaws.com";
+            String dns = "on-campus-navigation.caqb3uzoiuo3.us-east-1.rds.amazonaws.com"; //This must be changed to the endpoint of your AWS server
             String aClass = "net.sourceforge.jtds.jdbc.Driver";
             Class.forName(aClass).newInstance();
 

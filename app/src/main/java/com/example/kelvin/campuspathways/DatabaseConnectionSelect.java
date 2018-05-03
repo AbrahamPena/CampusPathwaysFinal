@@ -60,7 +60,7 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
         try {
 
             //Connection information
-            String dns = "on-campus-navigation.caqb3uzoiuo3.us-east-1.rds.amazonaws.com";
+            String dns = "on-campus-navigation.caqb3uzoiuo3.us-east-1.rds.amazonaws.com"; //This must be changed to the endpoint of your AWS server
             String aClass = "net.sourceforge.jtds.jdbc.Driver";
             Class.forName(aClass).newInstance();
 
@@ -137,6 +137,7 @@ class DatabaseConnectionSelect extends AsyncTask<String, Void, String> {
                 double extraSeconds = timeTaken - (60 * minutesTaken);
                 double distanceTraveled = userHeights.get(i) * path.getPoints().size() * 2;
 
+                //Formating the time to display appropriately
                 timeInfo = minutesTaken + " minutes, " + (int) extraSeconds + " seconds \n";
                 distanceInfo = distanceTraveled + " meters";
                 String pathInfo = minutesTaken + " minutes, " + (int) extraSeconds + " seconds \n"

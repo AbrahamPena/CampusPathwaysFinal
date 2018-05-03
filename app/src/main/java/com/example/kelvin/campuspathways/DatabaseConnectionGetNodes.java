@@ -51,7 +51,7 @@ class DatabaseConnectionGetNodes extends AsyncTask<Void, Void, Void> {
         try {
 
             //Information to connect to the database
-            String dns = "on-campus-navigation.caqb3uzoiuo3.us-east-1.rds.amazonaws.com";
+            String dns = "on-campus-navigation.caqb3uzoiuo3.us-east-1.rds.amazonaws.com"; //This must be changed to the endpoint of your AWS server
             String aClass = "net.sourceforge.jtds.jdbc.Driver";
             Class.forName(aClass).newInstance();
 
