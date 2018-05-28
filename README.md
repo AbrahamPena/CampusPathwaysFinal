@@ -1,6 +1,7 @@
 # CampusPathwaysFinal
 Campus Pathway Discovery is an android app that tracks and displays pathways taken by users
 This readme file contains ways to get the app to run if you're developing on either Windows or Mac/OSX
+
 ---Windows Set Up---
 This set of instructions will help with setting up the project on Windows
 A few things that are needed
