@@ -66,7 +66,9 @@ You are now ready to begin collecting and retrieving data!
 
 ---Known Problems---
 1) Some phones tend to work better than others, as their magnetometer is more sensitive
+
    Phones that had no issues: Samsung Galaxys in general, Motorola Moto X, LGs
+   
    Phones that had issues: Google Pixels, ZTEs
 2) Major bugs that have been found and fixed
    App crashes when pathway has been clicked
